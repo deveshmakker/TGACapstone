@@ -47,6 +47,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__ProductConnection=Server=capstone.mysql;port=3306;Database=capstone_productdb;User=root;Password=password1;
+      - ApiSettings__JwtOptions__Secret=This is used to Sign and verify JWT tokens, Replace it with your own secret
+      - ApiSettings__JwtOptions__Issuer=Capstone-AuthAPI
+      - ApiSettings__JwtOptions__Audience=Capstone-Client
+      - ApiSettings__JwtOptions__ExpiryInHours=7
     networks: 
       - capstone_network
 
@@ -66,7 +70,11 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__CartConnection=Server=capstone.mysql;port=3306;Database=capstone_cartdb;User=root;Password=password1;      
-      - ServiceUrls__ProductAPI=http://capstone.productapi:8080/      
+      - ServiceUrls__ProductAPI=http://capstone.productapi:8080/
+      - ApiSettings__JwtOptions__Secret=This is used to Sign and verify JWT tokens, Replace it with your own secret
+      - ApiSettings__JwtOptions__Issuer=Capstone-AuthAPI
+      - ApiSettings__JwtOptions__Audience=Capstone-Client
+      - ApiSettings__JwtOptions__ExpiryInHours=7
     networks: 
       - capstone_network
 
@@ -86,13 +94,18 @@ services:
       - "7114:8081"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__OrderConnection=Server=capstone.mysql;port=3306;Database=capstone_orderdb;User=root;Password=password1;
-      - ServiceUrls__CartAPI=https://localhost:7074/
-      - ServiceUrls__ProductAPI=https://localhost:7135/
+      - ServiceUrls__CartAPI=http://capstone.cartapi:8080/
+      - ServiceUrls__ProductAPI=http://capstone.productapi:8080/ 
       - ApiSettings__RabbitMqSettings__HostName=rabbitmq
       - ApiSettings__RabbitMqSettings__UserName=guest
       - ApiSettings__RabbitMqSettings__Password=guest
-      - ApiSettings__OrderQueueName=orderpublish 
+      - ApiSettings__OrderQueueName=orderpublish
+      - ApiSettings__JwtOptions__Secret=This is used to Sign and verify JWT tokens, Replace it with your own secret
+      - ApiSettings__JwtOptions__Issuer=Capstone-AuthAPI
+      - ApiSettings__JwtOptions__Audience=Capstone-Client
+      - ApiSettings__JwtOptions__ExpiryInHours=7 
     networks: 
       - capstone_network
 
@@ -111,6 +124,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__PaymentConnection=Server=capstone.mysql;port=3306;Database=capstone_paymentdb;User=root;Password=password1;
+      - ApiSettings__JwtOptions__Secret=This is used to Sign and verify JWT tokens, Replace it with your own secret
+      - ApiSettings__JwtOptions__Issuer=Capstone-AuthAPI
+      - ApiSettings__JwtOptions__Audience=Capstone-Client
+      - ApiSettings__JwtOptions__ExpiryInHours=7
     networks: 
       - capstone_network    
 

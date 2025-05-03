@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Order.API.Utility;
 using Order.Application;
 using Order.Application.Interfaces;
 using Order.Application.Services;
@@ -35,13 +36,15 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<BearerTokenHandler>();
+builder.Services.AddHttpContextAccessor(); 
 
-builder.Services.AddHttpContextAccessor(); // not sure
-builder.Services.AddHttpClient("CartApi", c => c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CartAPI"]));
-//.AddHttpMessageHandler<BackendApiAuthenticationHttpClientHandler>()
-//.AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromMilliseconds(120000)));
-builder.Services.AddHttpContextAccessor(); // not sure
-builder.Services.AddHttpClient("ProductApi", c => c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]));
+builder.Services.AddHttpClient("CartApi", c => c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CartAPI"]))
+.AddHttpMessageHandler<BearerTokenHandler>();
+
+
+builder.Services.AddHttpClient("ProductApi", c => c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]))
+.AddHttpMessageHandler<BearerTokenHandler>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
