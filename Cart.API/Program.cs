@@ -1,4 +1,5 @@
 using AutoMapper;
+using Cart.API.Utility;
 using Cart.Application;
 using Cart.Application.Interfaces;
 using Cart.Application.Services;
@@ -29,8 +30,11 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 
-builder.Services.AddHttpContextAccessor(); // not sure
-builder.Services.AddHttpClient("ProductApi", c => c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]));
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<BearerTokenHandler>();
+
+builder.Services.AddHttpClient("ProductApi", c => c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]))
+    .AddHttpMessageHandler<BearerTokenHandler>();
                                                                                   
 
 builder.Services.AddControllers();
