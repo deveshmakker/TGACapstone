@@ -1,0 +1,18 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "capstonecommon": "StartDebugging",
+        "product.api": "StartDebugging",
+        "order.api": "StartDebugging",
+        "cart.api": "StartDebugging",
+        "payment.api": "StartDebugging",
+        "auth.api": "StartDebugging",
+        "customer.api": "StartDebugging",
+        "ocelotgateway.api": "StartDebugging"
+      }
+    }
+  }
+}

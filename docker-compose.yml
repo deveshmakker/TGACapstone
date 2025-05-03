@@ -1,0 +1,161 @@
+services:
+  capstone.mysql:
+    image: mysql:latest
+    container_name: capstone.mysql
+    environment:
+        MYSQL_ROOT_PASSWORD: password1
+    ports:
+      - "3306:3306"    
+    healthcheck:
+       test : ["CMD", "mysqladmin", "ping", "-h", "capstone.mysql"]
+       interval: 10s
+       timeout: 10s
+       retries: 5   
+    networks: 
+      - capstone_network
+
+  capstone.rabbitmq: 
+    image: rabbitmq:3-management
+    container_name: capstone.rabbitmq
+    hostname: "rabbitmq"
+    labels:
+      NAME: "rabbitmq"
+    ports:
+    - "5672:5672"
+    - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: 
+      - capstone_network
+
+  product.api:
+    image: ${DOCKER_REGISTRY-}productapi
+    container_name: capstone.productapi
+    build:
+      context: .
+      dockerfile: Product.Api/Dockerfile
+    depends_on: 
+      capstone.mysql: 
+          condition: service_healthy
+    ports:
+      - "7135:8081"
+      - "7001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__ProductConnection=Server=capstone.mysql;port=3306;Database=capstone_productdb;User=root;Password=password1;
+    networks: 
+      - capstone_network
+
+  cart.api:
+    image: ${DOCKER_REGISTRY-}cartapi
+    container_name: capstone.cartapi
+    build:
+      context: .
+      dockerfile: Cart.API/Dockerfile
+    depends_on: 
+      capstone.mysql: 
+          condition: service_healthy     
+    ports:
+      - "7002:8080"
+      - "7074:8081"  
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__CartConnection=Server=capstone.mysql;port=3306;Database=capstone_cartdb;User=root;Password=password1;      
+      - ServiceUrls__ProductAPI=https://localhost:7135/      
+    networks: 
+      - capstone_network
+
+  order.api:
+    image: ${DOCKER_REGISTRY-}orderapi
+    container_name: capstone.orderapi
+    build:
+      context: .
+      dockerfile: Order.API/Dockerfile
+    depends_on: 
+      capstone.mysql: 
+          condition: service_healthy
+      capstone.rabbitmq:
+          condition: service_healthy
+    ports:
+      - "7003:8080"
+      - "7114:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__OrderConnection=Server=capstone.mysql;port=3306;Database=capstone_orderdb;User=root;Password=password1;
+      - ServiceUrls__CartAPI=https://localhost:7074/
+      - ServiceUrls__ProductAPI=https://localhost:7135/
+      - ApiSettings__RabbitMqSettings__HostName=rabbitmq
+      - ApiSettings__RabbitMqSettings__UserName=guest
+      - ApiSettings__RabbitMqSettings__Password=guest
+      - ApiSettings__OrderQueueName=orderpublish 
+    networks: 
+      - capstone_network
+
+  payment.api:
+    image: ${DOCKER_REGISTRY-}paymentapi
+    container_name: capstone.paymentapi
+    build:
+      context: .
+      dockerfile: Payment.API/Dockerfile
+    depends_on: 
+      capstone.mysql: 
+          condition: service_healthy
+    ports:
+      - "7004:8080"
+      - "7027:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__PaymentConnection=Server=capstone.mysql;port=3306;Database=capstone_paymentdb;User=root;Password=password1;
+    networks: 
+      - capstone_network    
+
+  auth.api:
+    image: ${DOCKER_REGISTRY-}authapi
+    container_name: capstone.authapi
+    build:
+      context: .
+      dockerfile: Auth.API/Dockerfile
+    depends_on: 
+      capstone.mysql: 
+          condition: service_healthy  
+    ports:
+      - "7005:8080"
+      - "7064:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__AuthConnection=Server=capstone.mysql;port=3306;Database=capstone_authdb;User=root;Password=password1;
+      - ApiSettings__JwtOptions__Secret=This is used to Sign and verify JWT tokens, Replace it with your own secret
+      - ApiSettings__JwtOptions__Issuer=Capstone-AuthAPI
+      - ApiSettings__JwtOptions__Audience=Capstone-Client
+      - ApiSettings__JwtOptions__ExpiryInHours=7
+    networks: 
+      - capstone_network 
+      
+  customer.api:
+    image: ${DOCKER_REGISTRY-}customerapi
+    container_name: capstone.customerapi
+    build:
+      context: .
+      dockerfile: Customer.API/Dockerfile
+    depends_on: 
+      capstone.mysql: 
+          condition: service_healthy  
+    ports:
+      - "7006:8080"
+      - "7102:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__CustomerConnection=Server=capstone.mysql;port=3306;Database=capstone_customerdb;User=root;Password=password1;
+      - ApiSettings__JwtOptions__Secret=This is used to Sign and verify JWT tokens, Replace it with your own secret
+      - ApiSettings__JwtOptions__Issuer=Capstone-AuthAPI
+      - ApiSettings__JwtOptions__Audience=Capstone-Client
+      - ApiSettings__JwtOptions__ExpiryInHours=7
+    networks: 
+      - capstone_network
+       
+networks:
+  capstone_network:
+     driver: bridge
