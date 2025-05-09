@@ -10,16 +10,17 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using StackExchange.Redis;
 using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var cartConnectionStr = builder.Configuration.GetConnectionString("CartConnection");
-builder.Services.AddDbContextPool<CartDbContext>(options =>
-{
-    options.UseMySql(cartConnectionStr, ServerVersion.AutoDetect(cartConnectionStr));
-});
+//var cartConnectionStr = builder.Configuration.GetConnectionString("CartConnection");
+//builder.Services.AddDbContextPool<CartDbContext>(options =>
+//{
+//    options.UseMySql(cartConnectionStr, ServerVersion.AutoDetect(cartConnectionStr));
+//});
 
 IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
 builder.Services.AddSingleton(mapper);
@@ -27,11 +28,18 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // Add services to the container.
 builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<ICartService, CartService>();
-builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ICartService, CartCacheService>();
+//builder.Services.AddScoped<ICartService, CartService>();
+//builder.Services.AddScoped<ICartRepository, CartRepository>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<BearerTokenHandler>();
+
+var redisConfiguration = builder.Configuration.GetSection("Redis")["ConnectionString"];
+var redis = ConnectionMultiplexer.Connect(redisConfiguration);
+//builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost"));
+builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
+builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 
 builder.Services.AddHttpClient("ProductApi", c => c.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]))
     .AddHttpMessageHandler<BearerTokenHandler>();

@@ -50,12 +50,6 @@ namespace Cart.Application.Services
 
             return cartObject;
         }
-
-        public bool RemoveCartContentDetails(int cartcontentdetailsid)
-        {
-            return _cartRepository.RemoveCartContentDetails(cartcontentdetailsid);
-        }
-
         public bool UpsertCartDetails(CartObjectDTO cartObject)
         {
             return _cartRepository.UpsertCartDetails(_mapper.Map<CartDetails>(cartObject.cartDTO), _mapper.Map<IEnumerable<CartContentDetails>>(cartObject.cartContentDTO));

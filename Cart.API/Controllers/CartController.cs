@@ -54,24 +54,6 @@ namespace Cart.API.Controllers
             }
             return Ok(_responseDTO);
         }
-
-        [HttpPost("RemoveCartContentDetails/{cartcontentdetailsid:int}")]
-        public IActionResult RemoveCartContentDetails(int cartcontentdetailsid)
-        {
-            try
-            {
-                _responseDTO.Result = _cartService.RemoveCartContentDetails(cartcontentdetailsid);
-                _responseDTO.IsSuccess = true;
-                _responseDTO.Message = ("Cart has been updated");
-            }
-            catch (Exception ex)
-            {
-                _responseDTO.Result = false;
-                _responseDTO.Message = ex.Message;
-            }
-            return Ok(_responseDTO);
-        }
-
         [HttpDelete("ClearCart/{customerid:int}")]
         public async Task<IActionResult> ClearCart(int customerid)
         {

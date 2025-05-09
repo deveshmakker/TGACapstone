@@ -7,7 +7,6 @@ namespace Cart.Application.Interfaces
     {
         Task<CartObjectDTO> GetCartByCustomerId(int customerId);
         bool UpsertCartDetails(CartObjectDTO cartObject);
-        bool RemoveCartContentDetails(int cartcontentdetailsid);
         Task<bool> ClearCart(int customerId);
     }
 }
