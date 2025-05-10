@@ -35,6 +35,15 @@ namespace Cart.Application.Services
             if (cart == null)
                 return null;
 
+            var products = await _productService.GetProducts();
+            foreach (var item in cart.cartContentDTO)
+            {
+                item.PricePerItem = products.FirstOrDefault(c => c.ProductId == item.ProductId).Price;
+                item.DiscountPercentage = products.FirstOrDefault(c => c.ProductId == item.ProductId).DiscountPercentage;
+
+                cart.cartDTO.CartTotal += (item.PricePerItem - ((item.PricePerItem * item.DiscountPercentage) / 100)) * item.Quantity;
+            }
+
             return _mapper.Map<CartObjectDTO>(cart);
         }
 

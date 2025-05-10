@@ -170,15 +170,15 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-MigrateDb();
+//MigrateDb();
 
 app.Run();
 
-void MigrateDb()
-{
-    using var scope = app.Services.CreateScope();
-    var _db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
-    if (_db.Database.GetPendingMigrations().Any())
-        _db.Database.Migrate();
-}
+//void MigrateDb()
+//{
+//    using var scope = app.Services.CreateScope();
+//    var _db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
+//    if (_db.Database.GetPendingMigrations().Any())
+//        _db.Database.Migrate();
+//}
 

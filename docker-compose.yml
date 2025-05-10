@@ -30,6 +30,21 @@ services:
       retries: 5
     networks: 
       - capstone_network
+  
+  capstone.redis:
+    image: redis:7.2-alpine
+    container_name: capstone.redis
+    ports:
+      - "6379:6379"    
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: 
+      - capstone_network
 
   product.api:
     image: ${DOCKER_REGISTRY-}productapi
@@ -62,7 +77,9 @@ services:
       dockerfile: Cart.API/Dockerfile
     depends_on: 
       capstone.mysql: 
-          condition: service_healthy     
+          condition: service_healthy
+      capstone.redis:
+          condition: service_healthy
     ports:
       - "7002:8080"
       - "7074:8081"  
@@ -75,6 +92,7 @@ services:
       - ApiSettings__JwtOptions__Issuer=Capstone-AuthAPI
       - ApiSettings__JwtOptions__Audience=Capstone-Client
       - ApiSettings__JwtOptions__ExpiryInHours=7
+      - Redis__ConnectionString=capstone.redis:6379
     networks: 
       - capstone_network
 
