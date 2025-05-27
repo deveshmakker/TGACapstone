@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: authapidevesh
+  namespace: devesh-app-ns
+spec:
+  selector:
+    app: authapi
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

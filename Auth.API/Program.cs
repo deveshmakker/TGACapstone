@@ -4,14 +4,33 @@ using Auth.Common.Model;
 using Auth.Common.Repository;
 using Auth.Data.Context;
 using Auth.Data.Repository;
+using Azure.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
-
 var builder = WebApplication.CreateBuilder(args);
+
+var keyVaultUri = builder.Configuration["KeyVault:Url"];
+if (!string.IsNullOrWhiteSpace(keyVaultUri))
+{
+    if (builder.Environment.EnvironmentName == "Development")
+    {
+        builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
+    }
+    else
+    {
+        ManagedIdentityCredential managedIdentityCredential = new(builder.Configuration["KeyVault:ClientId"]);
+        builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), managedIdentityCredential);
+    }
+}
+else
+{
+    throw new InvalidOperationException("KeyVaultUri must be set in options or configuration when UseKeyVault is enabled.");
+}
 
 var authDbConnectionStr = builder.Configuration.GetConnectionString("AuthConnection");
 builder.Services.AddDbContextPool<AuthDbContext>(options =>
