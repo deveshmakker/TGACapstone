@@ -14,6 +14,10 @@ using System.Security.Claims;
 using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure logging (optional: log to console explicitly)
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 var keyVaultUri = builder.Configuration["KeyVault:Url"];
 if (!string.IsNullOrWhiteSpace(keyVaultUri))
 {
@@ -32,13 +36,13 @@ else
     throw new InvalidOperationException("KeyVaultUri must be set in options or configuration when UseKeyVault is enabled.");
 }
 
-var authDbConnectionStr = builder.Configuration.GetConnectionString("AuthConnection");
+var authDbConnectionStr = builder.Configuration.GetValue<string>("devmakke1:ConnectionStrings:AuthConnection");
 builder.Services.AddDbContextPool<AuthDbContext>(options =>
 {
     options.UseMySql(authDbConnectionStr, ServerVersion.AutoDetect(authDbConnectionStr));
 });
 
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("ApiSettings:JwtOptions"));
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("devmakke1:ApiSettings:JwtOptions"));
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AuthDbContext>().AddDefaultTokenProviders();
 // Add services to the container.
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -52,7 +56,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var key = Encoding.ASCII.GetBytes(builder.Configuration["ApiSettings:JwtOptions:Secret"]);
+var key = Encoding.ASCII.GetBytes(builder.Configuration.GetValue<string>("devmakke1:ApiSettings:JwtOptions:Secret"));
 
 var tokenValidationParams = new TokenValidationParameters
 {
@@ -117,6 +121,9 @@ builder.Services.AddAuthentication(options =>
 });
 
 var app = builder.Build();
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("Application starting up...");
+logger.LogInformation(authDbConnectionStr);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -137,8 +144,15 @@ app.Run();
 
 void MigrateDb()
 {
-    using var scope = app.Services.CreateScope();
-    var _db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
-    if (_db.Database.GetPendingMigrations().Any())
-        _db.Database.Migrate();
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var _db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+        if (_db.Database.GetPendingMigrations().Any())
+            _db.Database.Migrate();
+    }
+    catch(Exception ex)
+    {
+        logger.LogError(ex,"");
+    }
 }
